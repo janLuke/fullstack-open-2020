@@ -1,0 +1,12 @@
+title Add a new note (SPA)
+
+note over browser:
+JavaScript code adds the new note 
+to the "notes" array and redraws 
+the note list; then it sends an 
+AJAX POST request to the server 
+containing the new note.
+end note
+
+browser->server: (AJAX) HTTP POST /new_note_spa
+server-->browser: HTTP Response with status 201 (Created)
