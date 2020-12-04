@@ -1,30 +1,45 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 
-const App = () => {
-  const course = 'Half Stack application development'
-  const part1 = 'Fundamentals of React'
-  const exercises1 = 10
-  const part2 = 'Using props to pass data'
-  const exercises2 = 7
-  const part3 = 'State of a component'
-  const exercises3 = 14
 
-  return (
-    <div>
-      <h1>{course}</h1>
-      <p>
-        {part1} {exercises1}
-      </p>
-      <p>
-        {part2} {exercises2}
-      </p>
-      <p>
-        {part3} {exercises3}
-      </p>
-      <p>Number of exercises {exercises1 + exercises2 + exercises3}</p>
-    </div>
-  )
+const CourseHeader = ({ title }) => (
+   <h1>{title}</h1>
+)
+
+const CourseContent = ({ parts }) => (
+   <ol>
+      {parts.map(part => (
+         <li key={part.title}>
+            {part.title} ({part.numExercises} exercises)
+         </li>
+      ))}
+   </ol>
+)
+
+const CourseTotalExercises = ({ numExercises }) => (
+   <p>Total number of exercises: {numExercises}</p>
+)
+
+const App = () => {
+   const course = {
+      title: 'Half Stack application development',
+      parts: [
+         { title: 'Fundamentals of React', numExercises: 10 },
+         { title: 'Using props to pass data', numExercises: 7 },
+         { title: 'State of a component', numExercises: 14 },
+      ]
+   }
+   const totalExercises = course.parts
+      .map(part => part.numExercises)
+      .reduce((a, b) => a + b);
+
+   return (
+      <div>
+         <CourseHeader title={course.title} />
+         <CourseContent parts={course.parts} />
+         <CourseTotalExercises numExercises={totalExercises} />
+      </div>
+   )
 }
 
 ReactDOM.render(<App />, document.getElementById('root'))
