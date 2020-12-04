@@ -1,0 +1,76 @@
+body {
+   margin: 0;
+   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+   -webkit-font-smoothing: antialiased;
+   -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+.App {
+   text-align: center;
+   padding: 1em;
+}
+
+button {
+   border-radius: 5px;
+   border: 0;
+   outline: none;
+   padding: 8px 12px;
+   margin: 4px;
+   background-color:  rgb(73, 131, 255);
+   cursor: pointer;
+   color: white;
+   min-width: 100px;
+}
+
+button:hover {
+   box-shadow: inset 0 0 100px 100px rgba(255, 255, 255, 0.1);
+}
+
+button:active {
+   box-shadow: inset 0 0 100px 100px rgba(0, 0, 0, 0.1);
+}
+
+button:focus {
+   outline: none;
+}
+
+section {
+   margin: 2em 0 3em;
+}
+
+.anectode {
+   position: relative;
+   display: flex;
+   align-items: center;
+   align-content: center;
+   max-width: 25em;
+   min-height: 3em;
+   margin: 8px auto;
+   padding: 16px 20px;
+   background-color: rgb(226, 235, 255);
+   border-radius: 3px;
+   text-align: left;
+}
+
+.anectode p {
+   width: 100%;
+   margin: 0;
+   padding: 0;
+}
+
+.anectode__votes {
+   position: absolute;
+   font-size: .85em;
+   bottom: -0.5em;
+   right: -0.5em;
+   padding: 3px 8px;
+   border-radius: 30px;
+   background-color:  rgb(7, 209, 0);
+   color:white;
+}
