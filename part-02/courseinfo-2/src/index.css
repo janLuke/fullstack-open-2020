@@ -1,0 +1,41 @@
+body {
+   margin: 0;
+   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+   -webkit-font-smoothing: antialiased;
+   -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+      monospace;
+}
+
+.App {
+   padding: 0 2em;
+}
+
+.App h2 {
+   margin: 8px 0;
+}
+
+.Course {
+   margin-bottom: 2em;
+}
+
+.Course ol {
+   margin: 0;
+   padding: 0;
+   list-style-position: inside;
+}
+
+.Course__total-exercises {
+   margin: 8px 0;
+   font-weight: bold;
+   color: rgb(0, 81, 255);
+}
+
+.Course__part-exercises {
+   color: rgb(0, 81, 255);
+}
