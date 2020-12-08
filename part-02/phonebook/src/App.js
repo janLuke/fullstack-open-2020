@@ -1,56 +1,113 @@
 import React, { useEffect, useState } from 'react'
-import axios from 'axios'
+import { toast, ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+import * as api from './api'
+
 import ContactForm from './ContactForm'
 import ContactListWithFilter from './ContactListWithFilter'
+import { replaceElem } from './util';
 
+
+/**
+ * WARNING: mutate the Array in-place!
+ */
+function sortByName(contacts) {
+   return contacts.sort((a, b) => a.name.localeCompare(b.name))
+}
 
 export default function App() {
-   const [state, setState] = useState({ type: "loading" })
+   const [state, setState] = useState("loading")
    const [contacts, setContacts] = useState([])
+   const [error, setError] = useState(null)
 
    useEffect(() => {
-      axios.get('http://localhost:3001/contacts')
-         .then(resp => {
-            console.log(resp);
-            setContacts(resp.data)
-            setState({ type: "ready" })
+      api.getAllContacts()
+         .then(contactList => {
+            setContacts(sortByName(contactList))
+            setState("ready")
          })
-         .catch(error => setState({
-            type: "error",
-            error: error.message,
-         }))
+         .catch(error => {
+            setState("error")
+            setError(error.message)
+         })
    }, [])
 
-   const addNewContact = (contact) => {
-      let newContacts = [...contacts, contact]
-      newContacts.sort((a, b) => a.name.localeCompare(b.name))
-      setContacts(newContacts)
+   const addNewContact = async (newContactData) => {
+      api.addContact(newContactData)
+         .then(newContact => {
+            let updatedContactList = [...contacts, newContact]
+            setContacts(sortByName(updatedContactList))
+         })
+         .catch(err => {
+            console.log(err)
+            toast.error(
+               'Ops! There was a problem sending the new contact to the ' +
+               'server! The contact could not be saved, sorry :(')
+         })
+   }
+
+   const updateContact = (modifiedContact) => {
+      api.updateContact(modifiedContact)
+         .then(updated => {
+            console.log(updated);
+            let index = contacts.findIndex(c => c.id === modifiedContact.id)
+            let newContacts = replaceElem(contacts, index, updated)
+            console.log(newContacts)
+            setContacts(sortByName(newContacts))
+         })
+         .catch(err => {
+            console.error(err)
+            toast.error(
+               "Ops! There was a problem while trying to update the contact. " +
+               "Details: " + err.message)
+         })
+   }
+
+   const deleteContact = (id) => {
+      api.deleteContact(id)
+         .then(resp => {
+            setContacts(contacts.filter(c => c.id !== id))  // preserve sorting
+         })
+         .catch(err => {
+            console.error(err)
+            toast.error(
+               "Ops! There was a problem while trying to delete the contact " +
+               "from your cloud phonebook! Details: " + err.message)
+         })
    }
 
    let content = null;
-   if (state.type === 'ready') {
+   if (state === 'ready') {
       content = (
          <>
             <Card className="add-item-card">
-               <ContactForm contacts={contacts} onSubmit={addNewContact} />
+               <ContactForm
+                  contacts={contacts}
+                  onAddNew={addNewContact}
+                  onUpdate={updateContact}
+               />
             </Card>
             <Card className="contact-list-card">
-               <ContactListWithFilter contacts={contacts} />
+               <ContactListWithFilter
+                  contacts={contacts}
+                  onDelete={deleteContact}
+               />
             </Card>
          </>
       )
    }
-   else if (state.type === 'loading') {
+   else if (state === 'loading') {
       content = null   // FIXME: put a spinner here
    }
-   else if (state.type === 'error') {
-      content = <p style={{ color: 'red' }}>{state.error}</p>
+   else if (state === 'error') {
+      content = <p style={{ color: 'red' }}>{error}</p>
    }
    else
-      throw new Error('invalid state.type');
+      throw new Error('invalid state');
 
    return (
       <div className="App">
+         <ToastContainer />
          <h1 className="header">PhoneBook</h1>
          <div className="content">
             {content}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 const PHONE_FIELD_INSTRUCTIONs =
    'A phone number can only contain digits separated by a single space ' +
@@ -15,34 +15,30 @@ const prettifyName = (name) => (
       .join(' ')
 )
 
-const prevalidateName = (name, contacts) => {
+const findContactByName = (name, contacts) => {
    name = normalizeName(name);
-   if (!name)
-      return ''
-   if (contacts.some(contact =>
-      normalizeName(contact.name) === name))
-      return 'This name is already in the contact list!'
-   return '';
+   return contacts.find(contact => normalizeName(contact.name) === name)
 }
 
-const prevalidatePhone = (phone) => {
-   phone = phone.trim();
-   if (!phone)
+const validatePartialPhoneNumber = (partialPhone) => {
+   partialPhone = partialPhone.trim();
+   if (!partialPhone)
       return ''
-   if (!phone.match(/^[+]?([0-9]+[- ]?)*$/))
+   if (!partialPhone.match(/^[+]?([0-9]+[- ]?)*$/))
       return PHONE_FIELD_INSTRUCTIONs;
    return '';
 }
 
-const validateName = (name, contacts) => {
+const validateName = (name, contacts, isNewName) => {
    name = normalizeName(name)
    if (!name)
       return 'Empty name!'
-   prevalidateName(name, contacts)
+   if (isNewName && findContactByName(name, contacts))
+      return 'This name already exists in the phonebook!'
    return '';
 }
 
-const validatePhone = (phone) => {
+const validatePhoneNumber = (phone) => {
    phone = phone.trim();
    if (!phone)
       return 'Empty phone number!'
@@ -67,43 +63,53 @@ const InputFormField = ({ type, label, id, value, onChange, error, inputRef, ...
    </div>
 )
 
-export default function ContactForm({ contacts, onSubmit }) {
+export default function ContactForm({ contacts, onAddNew, onUpdate }) {
    const [name, setName] = useState('')
    const [nameError, setNameError] = useState('')
    const [phone, setPhone] = useState('')
    const [phoneError, setPhoneError] = useState('')
    const [nameInput, setNameInput] = useState(null)
+   const [existingContact, setExistingContact] = useState(null)
+
+   useEffect(() => {
+      let contact = findContactByName(name, contacts)
+      setExistingContact(contact)
+   }, [name, contacts])
 
    const updateName = (event) => {
       let newName = event.target.value
-      let error = prevalidateName(newName, contacts)
-      setNameError(error)
       setName(newName)
    }
 
    const updatePhone = (event) => {
       let newNumber = event.target.value
-      let error = prevalidatePhone(newNumber.trim())
+      let error = validatePartialPhoneNumber(newNumber.trim())
       setPhoneError(error)
       setPhone(newNumber)
    }
 
    const submit = (event) => {
       event.preventDefault()
-      let nameErr = validateName(name, contacts)
-      let phoneErr = validatePhone(phone.trim(), contacts)
+      let nameErr = validateName(name, contacts, !existingContact)
+      let phoneErr = validatePhoneNumber(phone.trim(), contacts)
       if (nameErr || phoneErr) {
          setNameError(nameErr)
          setPhoneError(phoneErr)
       }
       else {
-         nameInput.focus();
+         if (existingContact) {
+            if (phone !== existingContact.phoneNumber)
+               onUpdate({ ...existingContact, phoneNumber: phone })
+         }
+         else {
+            onAddNew({
+               name: prettifyName(name),
+               phoneNumber: phone.trim()
+            })
+         }
          setName('')
          setPhone('')
-         onSubmit({
-            name: prettifyName(name),
-            phoneNumber: phone.trim()
-         })
+         nameInput.focus();
       }
    }
 
@@ -126,8 +132,13 @@ export default function ContactForm({ contacts, onSubmit }) {
             error={phoneError}
             onChange={updatePhone}
          />
-         <button type="submit" onClick={submit} disabled={disabled}>
-            Add new contact
+         <button
+            type="submit"
+            onClick={submit}
+            disabled={disabled}
+            className={existingContact ? "ContactForm__update-btn" : undefined}
+         >
+            {existingContact ? "Update contact" : "Add new contact"}
          </button>
       </form>
    )

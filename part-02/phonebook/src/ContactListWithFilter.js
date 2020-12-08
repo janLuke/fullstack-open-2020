@@ -1,4 +1,5 @@
 import React, { useState, memo } from 'react'
+import { FaTrash } from 'react-icons/fa'
 
 /**
  * Partition the string into three parts using the given separator.
@@ -10,7 +11,7 @@ import React, { useState, memo } from 'react'
  * 
  * Inspired by Python str.partition.
  */
-function stringPartition(text, sep, caseInsensitive = false) {
+function partitionString(text, sep, caseInsensitive = false) {
    let i;
    if (caseInsensitive) {
       let lowerText = text.toLowerCase();
@@ -26,11 +27,28 @@ function stringPartition(text, sep, caseInsensitive = false) {
    return [text.slice(0, i), text.slice(i, j), text.slice(i + sep.length)]
 }
 
-const ContactItem = memo(({ contact, nameFilter }) => {
-   let [prefix, toHighlight, postfix] =
-      stringPartition(contact.name, nameFilter, true)
+function mergeClasses(...cls) {
+   return cls.filter(c => c != null).join(' ')
+}
 
-   let nameElem = (toHighlight)
+const IconButton = ({ children, className, ...props }) => (
+   <button className={mergeClasses("IconButton", className)} {...props}>
+      {children}
+   </button>
+)
+
+const ContactItem = memo(({ contact, nameFilter, onDelete }) => {
+
+   const confirmDeletion = () => {
+      if (window.confirm(`Do you really want to delete ${contact.name}?`))
+         onDelete(contact.id)
+   }
+
+   // Highlight the query (if present)
+   const [prefix, toHighlight, postfix] =
+      partitionString(contact.name, nameFilter, true)
+
+   const nameElem = (toHighlight)
       ? <span>{prefix}<strong>{toHighlight}</strong>{postfix}</span>
       : contact.name;
 
@@ -39,8 +57,20 @@ const ContactItem = memo(({ contact, nameFilter }) => {
          className="ContactItem"
          key={contact.name}
       >
-         <div className="ContactItem__name">{nameElem}</div>
-         <div className="ContactItem__phone">{contact.phoneNumber}</div>
+         <div className="ContactItem__info">
+            <div className="ContactItem__name">
+               {nameElem}
+            </div>
+            <div className="ContactItem__phone">
+               {contact.phoneNumber}
+            </div>
+         </div>
+
+         <div className="ContactItem__buttons">
+            <IconButton className="IconButton--red" onClick={confirmDeletion}>
+               <FaTrash />
+            </IconButton>
+         </div>
       </li>
    )
 })
@@ -52,7 +82,7 @@ function filterContactsByName(contacts, filter) {
    ))
 }
 
-const ContactList = memo(({ contacts, nameFilter }) => {
+const ContactList = memo(({ contacts, nameFilter, onDelete }) => {
    let results = filterContactsByName(contacts, nameFilter);
    if (results.length === 0) {
       return (
@@ -71,13 +101,14 @@ const ContactList = memo(({ contacts, nameFilter }) => {
                key={contact.name}
                contact={contact}
                nameFilter={nameFilter}
+               onDelete={onDelete}
             />
          ))}
       </ul>
    )
 })
 
-export default function ContactListWithFilter({ contacts }) {
+export default function ContactListWithFilter({ contacts, onDelete }) {
    const [filter, setFilter] = useState('')
 
    const onFilterChange = (event) => {
@@ -94,7 +125,11 @@ export default function ContactListWithFilter({ contacts }) {
                placeholder="Filter by name..."
                onChange={onFilterChange} />
          </div>
-         <ContactList contacts={contacts} nameFilter={filter} />
+         <ContactList
+            contacts={contacts}
+            nameFilter={filter}
+            onDelete={onDelete}
+         />
       </div>
    )
 }
