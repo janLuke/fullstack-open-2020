@@ -20,79 +20,97 @@ export default function App() {
    const [contacts, setContacts] = useState([])
    const [error, setError] = useState(null)
 
-   useEffect(() => {
+   const fetchAllContacts = () => {
       api.getAllContacts()
          .then(contactList => {
             setContacts(sortByName(contactList))
             setState("ready")
          })
-         .catch(error => {
+         .catch(err => {
             setState("error")
-            setError(error.message)
+            setError(
+               "Error while trying to fetch data from the server.\n" +
+               `Details: ${err.message}`)
          })
-   }, [])
+   }
 
    const addNewContact = async (newContactData) => {
       api.addContact(newContactData)
          .then(newContact => {
             let updatedContactList = [...contacts, newContact]
             setContacts(sortByName(updatedContactList))
+            toast.success(
+               `${newContact.name} was saved`,
+               { autoClose: 3000 }
+            )
          })
          .catch(err => {
             console.log(err)
             toast.error(
-               'Ops! There was a problem sending the new contact to the ' +
-               'server! The contact could not be saved, sorry :(')
+               'There was a problem sending the new contact to the server. ' +
+               'The contact could not be saved, sorry. Error: ' + err.message)
          })
    }
 
-   const updateContact = (modifiedContact) => {
-      api.updateContact(modifiedContact)
+   const updateContact = (modified) => {
+      api.updateContact(modified)
          .then(updated => {
             console.log(updated);
-            let index = contacts.findIndex(c => c.id === modifiedContact.id)
+            let index = contacts.findIndex(c => c.id === modified.id)
             let newContacts = replaceElem(contacts, index, updated)
-            console.log(newContacts)
             setContacts(sortByName(newContacts))
+            toast.success(
+               `The number of "${updated.name}" was updated with success.`)
          })
          .catch(err => {
-            console.error(err)
             toast.error(
-               "Ops! There was a problem while trying to update the contact. " +
+               `There was a problem while trying to update "${modified.name}". ` +
                "Details: " + err.message)
          })
    }
 
    const deleteContact = (id) => {
+      let deleted = contacts.find(c => c.id === id);
       api.deleteContact(id)
          .then(resp => {
             setContacts(contacts.filter(c => c.id !== id))  // preserve sorting
+            toast.success(`"${deleted.name}" was deleted with success.`)
          })
          .catch(err => {
-            console.error(err)
-            toast.error(
-               "Ops! There was a problem while trying to delete the contact " +
-               "from your cloud phonebook! Details: " + err.message)
+            console.log(err)
+            let msg;
+            if (err.response && err.response.status === 404) {
+               fetchAllContacts()
+               msg = `It seems "${deleted.name}" had already been deleted. ` +
+                  " You were using a stale tab, but now you're okay!"
+            }
+            else {
+               msg = `There was a problem while trying to delete "${deleted.name}". ` +
+                  "Details: " + err.message
+            }
+            toast.error(msg)
          })
    }
+
+   useEffect(fetchAllContacts, [])
 
    let content = null;
    if (state === 'ready') {
       content = (
          <>
-            <Card className="add-item-card">
+            <Panel className="add-item-panel">
                <ContactForm
                   contacts={contacts}
                   onAddNew={addNewContact}
                   onUpdate={updateContact}
                />
-            </Card>
-            <Card className="contact-list-card">
+            </Panel>
+            <Panel className="contact-list-panel">
                <ContactListWithFilter
                   contacts={contacts}
                   onDelete={deleteContact}
                />
-            </Card>
+            </Panel>
          </>
       )
    }
@@ -116,8 +134,8 @@ export default function App() {
    )
 }
 
-const Card = ({ className, children }) => {
-   let classes = 'Card' + (' ' + className || '')
+const Panel = ({ className, children }) => {
+   let classes = 'Panel' + (' ' + className || '')
    return (
       <div className={classes}>
          {children}
